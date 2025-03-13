@@ -75,18 +75,18 @@ class ProductResource extends Resource
                     ]),
 
                     Section::make('Image')
-                        ->schema([
-                            FileUpload::make('image')
-                                ->image()
-                                ->directory('uploads/images'), // Optional: Custom upload directory
-                        ])->collapsible(),
+                    ->schema([
+                        FileUpload::make('image')
+                            ->image()
+                            ->directory('uploads/images'), // Optional: Custom upload directory
+                    ])->collapsible(),
 
-                    Section::make('Associations')
-                        ->schema([
-                            Select::make('brand_id')
-                                ->relationship('brand', 'name')
-                                ->searchable()
-                                ->preload(), // Preloads options for better UX
+                Section::make('Associations')
+                    ->schema([
+                        Select::make('brand_id')
+                            ->relationship('brand', 'name')
+                            ->searchable()
+                            ->preload(), // Preloads options for better UX
     ]),
                 ])
             ]);
