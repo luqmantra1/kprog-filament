@@ -28,7 +28,7 @@ public function up(): void
         $table->longText('description')->nullable();
         
         // Quantity and price
-        $table->unsignedBigInteger('quantity');
+        $table->unsignedBigInteger('quantity')->default(0);
         $table->decimal('price', 10, 2);
         
         // Visibility and featured flags

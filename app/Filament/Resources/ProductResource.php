@@ -58,7 +58,7 @@ class ProductResource extends Resource
                        TextInput::make('quantity'),
                        Select::make('type')
                        ->options([
-                        'downloadble'=> ProductTypeEnum::DOWNLOADABLE->value,
+                        'downloadable'=> ProductTypeEnum::DOWNLOADABLE->value,
                         'deliverable'=> ProductTypeEnum::DELIVERABLE->value,
                        ])
                     ])->columns(2),
