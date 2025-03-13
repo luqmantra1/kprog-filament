@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ProductTypeEnum;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -22,6 +24,7 @@ use Filament\Forms\Components\Group;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
 
 
 class ProductResource extends Resource
@@ -48,13 +51,17 @@ class ProductResource extends Resource
                        ->columnSpan('full'),
                     ])->columns(2),
 
-                    Section::make()
+                    Section::make('Pricing & Inventory')
                     ->schema([
-                       TextInput::make('name') ,
-                       TextInput::make('slug'),
-                       MarkdownEditor::make('description')
-                       ->columnSpan('full'),
-                    ])->columns(2)
+                       TextInput::make('sku'),
+                       TextInput::make('price'),
+                       TextInput::make('quantity'),
+                       Select::make('type')
+                       ->options([
+                        'downloadble'=> ProductTypeEnum::DOWNLOADABLE->value,
+                        'deliverable'=> ProductTypeEnum::DELIVERABLE->value,
+                       ])
+                    ])->columns(2),
                     ]),
                     
 
@@ -65,7 +72,22 @@ class ProductResource extends Resource
                        Toggle::make('is_visible'),
                        Toggle::make('is_featured'),
                        DatePicker::make('published_at'),
-                    ])
+                    ]),
+
+                    Section::make('Image')
+                        ->schema([
+                            FileUpload::make('image')
+                                ->image()
+                                ->directory('uploads/images'), // Optional: Custom upload directory
+                        ])->collapsible(),
+
+                    Section::make('Associations')
+                        ->schema([
+                            Select::make('brand_id')
+                                ->relationship('brand', 'name')
+                                ->searchable()
+                                ->preload(), // Preloads options for better UX
+    ]),
                 ])
             ]);
     }
