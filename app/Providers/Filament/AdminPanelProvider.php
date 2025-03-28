@@ -26,6 +26,8 @@ use App\Filament\Resources\DashboardResource\Widgets\StatsOverview;
 use App\Filament\Resources\DashboardResource\Widgets\ProductsChart;
 use Filament\Pages\Dashboard;
 use pxlrbt\FilamentSpotlight\SpotlightPlugin;
+use PxlBrt\FilamentExcel\Actions\Tables\ExportBulkAction;
+
 
 class AdminPanelProvider extends PanelProvider
 {
