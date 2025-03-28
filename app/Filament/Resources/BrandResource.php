@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BrandResource\Pages;
 use App\Filament\Resources\BrandResource\RelationManagers;
+use App\Filament\Resources\BrandResource\RelationManagers\ProductsRelationManager;
 use App\Models\Brand;
+use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Group;
@@ -22,6 +24,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Toggle;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Resources\Concerns\HasGlobalSearch;
+use Filament\Resources\RelationManagers\RelationManager;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BrandResource extends Resource
 {
@@ -32,6 +39,8 @@ class BrandResource extends Resource
     protected static ?int $navigationSort = 1;
 
     protected static ?string $navigationGroup = 'Shop';
+
+
     
 
     public static function form(Form $form): Form
@@ -135,13 +144,13 @@ class BrandResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
+        public static function getRelations(): array
     {
         return [
-            //
+            ProductsRelationManager::class,
         ];
     }
-
+    
     public static function getPages(): array
     {
         return [

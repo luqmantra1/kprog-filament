@@ -10,6 +10,7 @@ use App\Models\Product;
 use Doctrine\DBAL\Schema\Schema;
 use Filament\Forms;
 use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -18,11 +19,14 @@ use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+use Filament\Tables\Actions\DeleteBulkAction;
 
 class OrderResource extends Resource
 {
@@ -34,6 +38,17 @@ class OrderResource extends Resource
 
     protected static?string $navigationGroup='Shop';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status','=','processing')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('status','=','processing')->count() > 10
+        ? 'warning'
+        : 'primary';
+    }
     public static function form(Form $form): Form
     {
         return $form
@@ -51,6 +66,12 @@ class OrderResource extends Resource
                         ->relationship('customer','name')
                         ->searchable()
                         ->required(),
+                        
+                        TextInput::make('shipping_price')
+                        ->label('Shipping Costs')
+                        ->dehydrated()
+                        ->numeric()
+                        ->required(),
 
                         Select::make('type')
                         ->options([
@@ -58,8 +79,9 @@ class OrderResource extends Resource
                             'processing'=> OrderStatusEnum::PROCESSING->value,
                             'completed'=> OrderStatusEnum::COMPLETED->value,
                             'declined'=> OrderStatusEnum::DECLINED->value,
-                        ])->columnSpanFull() ->required(),
+                        ])->required(),
 
+ 
                         MarkdownEditor::make('notes')
                         ->columnSpanFull()
                     ])->columns(2),
@@ -72,12 +94,18 @@ class OrderResource extends Resource
                     ->schema([
                         Select::make('product_id')
                     ->label('Product')
-                    ->options(Product::query()->pluck('name','id')),
+                    ->options(Product::query()->pluck('name','id'))
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(fn ($state, Forms\Set $set)=>
+                    $set('unit_price', Product::find($state)?->price ?? 0)),
 
                     TextInput::make('quantity')
                     ->numeric()
                     ->default(1)
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->dehydrated(),
 
                     TextInput::make('unit_price')
                     ->label('Unit Price')
@@ -85,7 +113,13 @@ class OrderResource extends Resource
                     ->dehydrated()
                     ->numeric()
                     ->required(),
-                    ])->columns(3)
+
+                    Placeholder::make('total_price')
+                    ->label('Total Price')
+                    ->content(function($get){
+                        return $get('quantity')* $get('unit_price');
+                    })
+                    ])->columns(4)
                 ])
                 ])->columnSpanFull(),
             ]);
@@ -108,13 +142,6 @@ class OrderResource extends Resource
                 ->sortable()
                 ->searchable(),
 
-                TextColumn::make('total_price')
-                ->searchable()
-                ->sortable()
-                ->summarize([
-                    Sum::make()
-                    ->money()
-                ]),
 
                 TextColumn::make('created_at')
                 ->label('Order Date')
@@ -132,6 +159,7 @@ class OrderResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    ExportBulkAction::make(), // ✅ Just call it like this
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

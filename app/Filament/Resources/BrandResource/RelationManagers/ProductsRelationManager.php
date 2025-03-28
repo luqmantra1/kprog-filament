@@ -1,84 +1,47 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\BrandResource\RelationManagers;
 
 use App\Enums\ProductTypeEnum;
-use App\Filament\Resources\ProductResource\Pages;
-use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\TextInputColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\Group;
-use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\onBlur;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use PhpParser\Node\Expr\Ternary;
-use Symfony\Contracts\Service\Attribute\Required;
 
-class ProductResource extends Resource
+
+
+class ProductsRelationManager extends RelationManager
 {
-    protected static ?string $model = Product::class;
+    protected static string $relationship = 'products';
 
-    protected static ?string $navigationIcon = 'heroicon-o-bolt';
-
-    protected static ?string $navigationLabel ='Products';
-
-    protected static ?string $navigationGroup ='Shop';
-
-    protected static ?string $recordTitleAttribute = 'name';
-
-    protected static int $globalSearchResultsLimit = 20;
-
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::count();
-    }
-
-    public static function getGloballySearchableAttributes(): array
-{
-    return ['name','slug','description'];
-}
-   
-public static function getGlobalSearchResultDetails(Model $record): array
-{
-    return [
-        'Brand' => optional($record->brand)->name];
-}
-
-public static function getGlobalSearchEloquentQuery(): Builder
-{
-    return parent::getGlobalSearchEloquentQuery()->with(['brand']);
-}
-    
-
-
-    public static function form(Form $form): Form
+    public function form(Form $form): Form
     {
         return $form
             ->schema([
-                Group::make()
-                 ->schema([
-                    Section::make()
+                Tabs::make('Products')
+                ->tabs([
+                    Tab::make('Information')
                     ->schema([
-                       TextInput::make('name') 
+                        TextInput::make('name') 
                        ->required()
                        ->live(onBlur:true)
                        ->unique()
@@ -98,9 +61,9 @@ public static function getGlobalSearchEloquentQuery(): Builder
                        ->columnSpan('full'),
                     ])->columns(2),
 
-                    Section::make('Pricing & Inventory')
+                    Tab::make('Pricing & Inventory')
                     ->schema([
-                       TextInput::make('sku')
+                        TextInput::make('sku')
                        ->label("SKU (Stock Keeping Unit)")
                        ->unique()
                        ->required(),
@@ -118,14 +81,10 @@ public static function getGlobalSearchEloquentQuery(): Builder
                         'deliverable'=> ProductTypeEnum::DELIVERABLE->value,
                        ])->required()
                     ])->columns(2),
-                    ]),
-                    
 
-                Group::make()
-                ->schema([
-                    Section::make('Status')
+                    Tab::make('Additional Information')
                     ->schema([
-                       Toggle::make('is_visible')
+                        Toggle::make('is_visible')
                        ->label('Visibility')
                        ->helperText('Enable or Disable product visibility')
                        ->default(true),
@@ -135,37 +94,29 @@ public static function getGlobalSearchEloquentQuery(): Builder
                        DatePicker::make('published_at')
                        ->label('Availability')
                        ->default(now()),
-                    ]),
 
-                    Section::make('Image')
-                    ->schema([
-                        FileUpload::make('image')
-                            ->image()
-                            ->directory('form-attachments') // Optional: Custom upload directory
-                            ->preserveFilenames()
-                            ->imageEditor()
-                    ])->collapsible(),
-
-                Section::make('Associations')
-                    ->schema([
-                        Select::make('brand_id')
-                            ->relationship('brand', 'name')
-                            ->searchable()
-                            ->preload() // Preloads options for better UX
-                            ->required(),
 
                             Select::make('catagories')
                             ->relationship('categories','name')
                             ->multiple()
-                            ->required()
-    ]),
-                ])
+                            ->required(),
+
+                            FileUpload::make('image')
+                            ->image()
+                            ->directory('form-attachments') // Optional: Custom upload directory
+                            ->preserveFilenames()
+                            ->imageEditor()
+                            ->columnSpanFull()
+
+                    ])->columns(2),
+                ])->columnSpanFull()
             ]);
     }
 
-    public static function table(Table $table): Table
+    public function table(Table $table): Table
     {
         return $table
+            ->recordTitleAttribute('name')
             ->columns([
                 ImageColumn::make('image'),
                 TextColumn::make('name')
@@ -206,22 +157,23 @@ public static function getGlobalSearchEloquentQuery(): Builder
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->filters([
+                //
+            ])
+            ->headerActions([
+                Tables\Actions\CreateAction::make(),
+            ])
+            ->actions([
+                ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                ])
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListProducts::route('/'),
-            'create' => Pages\CreateProduct::route('/create'),
-            'edit' => Pages\EditProduct::route('/{record}/edit'),
-        ];
     }
 }

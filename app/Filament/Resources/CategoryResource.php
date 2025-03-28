@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\BrandResource\RelationManagers\ProductsRelationManager;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Filament\Resources\CategoryResource\RelationManagers;
 use App\Models\Category;
@@ -33,6 +34,7 @@ class CategoryResource extends Resource
     protected static ?int $navigationSort = 4;
 
     protected static ?string $navigationGroup = 'Shop';
+
 
     public static function form(Form $form): Form
     {
@@ -122,7 +124,7 @@ class CategoryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ProductsRelationManager::class
         ];
     }
 
